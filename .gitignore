@@ -1,0 +1,6 @@
+# Build output (published as GitHub release assets instead)
+/dist/
+*.exe
+*.test
+*.log
+assets/preview.png

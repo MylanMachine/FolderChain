@@ -1,0 +1,211 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>FolderChain</title>
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+
+<!-- ============ Onboarding ============ -->
+<main id="setup" class="setup" hidden>
+  <section class="setup-card">
+    <div class="brand-mark big" aria-hidden="true"></div>
+    <h1>Welcome to FolderChain</h1>
+    <p class="lede">Keep one folder identical on every computer in your shop — private, encrypted, and straight over your local network.</p>
+
+    <div class="step" data-step="choose">
+      <div class="choice-grid">
+        <button type="button" class="choice" data-mode="create">
+          <span class="choice-icon" data-icon="plus"></span>
+          <span class="choice-title">Create a new share</span>
+          <span class="choice-sub">Start here on the first computer</span>
+        </button>
+        <button type="button" class="choice" data-mode="join">
+          <span class="choice-icon" data-icon="link"></span>
+          <span class="choice-title">Join an existing share</span>
+          <span class="choice-sub">You have a share key from another computer</span>
+        </button>
+      </div>
+    </div>
+
+    <form class="step" data-step="details" id="setup-form" hidden>
+      <label class="field" id="key-field">
+        <span>Share key</span>
+        <input id="setup-key" class="mono" autocomplete="off" spellcheck="false" placeholder="XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX">
+        <small>Find it on the other computer under <b>Add a device</b>.</small>
+      </label>
+      <div class="field">
+        <span>Folder to sync</span>
+        <div class="folder-pick">
+          <input id="setup-folder" placeholder="C:\GCode" autocomplete="off" spellcheck="false">
+          <button type="button" class="btn" id="setup-browse"><span data-icon="folder"></span>Browse…</button>
+        </div>
+        <small>Anything already in this folder is kept and shared.</small>
+      </div>
+      <label class="field">
+        <span>Name for this computer</span>
+        <input id="setup-name" autocomplete="off">
+      </label>
+      <label class="switch-row">
+        <span>Start FolderChain when Windows starts</span>
+        <input type="checkbox" role="switch" class="switch" id="setup-autostart" checked>
+      </label>
+      <p class="form-error" id="setup-error" role="alert"></p>
+      <div class="actions">
+        <button type="button" class="btn ghost" id="setup-back">Back</button>
+        <button type="submit" class="btn primary" id="setup-go">Start syncing</button>
+      </div>
+    </form>
+  </section>
+</main>
+
+<!-- ============ Main app ============ -->
+<div id="app" class="app" hidden>
+  <header class="topbar">
+    <div class="brand"><div class="brand-mark" aria-hidden="true"></div><span>FolderChain</span></div>
+    <div class="status-pill" id="status-pill" role="status"><span class="dot"></span><span id="status-text">…</span></div>
+    <div class="top-actions">
+      <button type="button" class="icon-btn" id="pause-btn" title="Pause syncing"><span data-icon="pause"></span></button>
+      <button type="button" class="icon-btn" id="settings-btn" title="Settings"><span data-icon="gear"></span></button>
+    </div>
+  </header>
+
+  <div class="banner" id="banner" hidden></div>
+
+  <div class="grid">
+    <div class="col">
+      <section class="card hero">
+        <div class="hero-top">
+          <div class="folder-icon" data-icon="folder-big"></div>
+          <div class="hero-text">
+            <h2 id="folder-name">—</h2>
+            <p id="folder-path" class="muted"></p>
+          </div>
+          <button type="button" class="btn primary" id="open-folder"><span data-icon="external"></span>Open folder</button>
+        </div>
+        <div class="stats">
+          <div><b id="stat-files">0</b><span>files</span></div>
+          <div><b id="stat-size">0 B</b><span>total size</span></div>
+          <div><b id="stat-devices">0</b><span>devices online</span></div>
+          <div><b id="stat-last">—</b><span>last change synced</span></div>
+        </div>
+      </section>
+
+      <section class="card" id="transfers-card" hidden>
+        <h3>Transferring</h3>
+        <ul class="transfers" id="transfers"></ul>
+      </section>
+
+      <section class="card grow">
+        <div class="card-head">
+          <h3>Activity</h3>
+          <button type="button" class="link-btn" id="rescan-btn"><span data-icon="refresh"></span>Check now</button>
+        </div>
+        <ul class="activity" id="activity"></ul>
+      </section>
+    </div>
+
+    <div class="col side">
+      <section class="card">
+        <div class="card-head">
+          <h3>Devices</h3>
+        </div>
+        <ul class="devices" id="devices"></ul>
+        <button type="button" class="btn wide" id="add-device-btn"><span data-icon="plus"></span>Add a device</button>
+      </section>
+      <section class="card tip">
+        <span data-icon="shield"></span>
+        <p>Files travel only between your computers, encrypted end-to-end. Replaced or deleted files are kept for 30 days in the folder's hidden <code>.folderchain\archive</code>.</p>
+      </section>
+    </div>
+  </div>
+</div>
+
+<!-- ============ Add device ============ -->
+<dialog id="add-dialog" aria-labelledby="add-title" closedby="any">
+  <h2 id="add-title">Add a device</h2>
+  <ol class="steps">
+    <li>Copy <b>FolderChain.exe</b> to the other computer and open it.</li>
+    <li>Choose <b>Join an existing share</b>.</li>
+    <li>Enter this share key:</li>
+  </ol>
+  <div class="key-box">
+    <code id="share-key" class="mono">…</code>
+    <button type="button" class="btn" id="copy-key"><span data-icon="copy"></span>Copy</button>
+  </div>
+  <p class="muted small">Anyone with this key can join, so share it only with your own computers. Both computers need to be on the same network.</p>
+  <form method="dialog" class="actions"><button class="btn primary" autofocus>Done</button></form>
+</dialog>
+
+<!-- ============ Settings ============ -->
+<dialog id="settings-dialog" aria-labelledby="settings-title" closedby="any" class="wide-dialog">
+  <h2 id="settings-title">Settings</h2>
+  <form id="settings-form">
+    <label class="field">
+      <span>Name for this computer</span>
+      <input id="set-name" autocomplete="off">
+    </label>
+    <div class="field">
+      <span>Synced folder</span>
+      <div class="folder-pick">
+        <input id="set-folder" readonly>
+        <button type="button" class="btn" id="set-browse">Change…</button>
+      </div>
+    </div>
+    <label class="switch-row">
+      <span>Start FolderChain when Windows starts</span>
+      <input type="checkbox" role="switch" class="switch" id="set-autostart">
+    </label>
+    <label class="field">
+      <span>Extra device addresses <em class="muted">(optional)</em></span>
+      <input id="set-peers" placeholder="192.168.1.20, shop-pc" autocomplete="off" spellcheck="false">
+      <small>Devices are found automatically. Add addresses only if your network blocks discovery.</small>
+    </label>
+
+    <div class="setting-group">
+      <div>
+        <b>Windows Firewall</b>
+        <p class="muted small">If devices can't see each other, allow FolderChain through the firewall (asks for admin).</p>
+      </div>
+      <button type="button" class="btn" id="firewall-btn"><span data-icon="shield"></span>Allow</button>
+    </div>
+    <div class="setting-group">
+      <div>
+        <b>Previous versions</b>
+        <p class="muted small">Overwritten and deleted files from the last 30 days.</p>
+      </div>
+      <button type="button" class="btn" id="archive-btn"><span data-icon="external"></span>Open</button>
+    </div>
+    <div class="setting-group danger">
+      <div>
+        <b>Leave this share</b>
+        <p class="muted small">Stops syncing on this computer. Your files stay where they are.</p>
+      </div>
+      <button type="button" class="btn danger" id="leave-btn">Leave…</button>
+    </div>
+
+    <p class="muted small about" id="about"></p>
+    <div class="actions">
+      <button type="button" class="btn ghost" id="settings-cancel">Cancel</button>
+      <button type="submit" class="btn primary">Save</button>
+    </div>
+  </form>
+</dialog>
+
+<dialog id="confirm-dialog" aria-labelledby="confirm-title">
+  <h2 id="confirm-title">Leave this share?</h2>
+  <p>This computer will stop syncing. Files already in the folder are not deleted.</p>
+  <form method="dialog" class="actions">
+    <button class="btn ghost" value="cancel" autofocus>Cancel</button>
+    <button class="btn danger" value="leave">Leave share</button>
+  </form>
+</dialog>
+
+<div id="toast" class="toast" popover="manual" role="status"></div>
+
+<script src="app.js"></script>
+</body>
+</html>
