@@ -4,3 +4,7 @@
 *.test
 *.log
 assets/preview.png
+
+# Local code-signing settings and tools (see SIGNING.md)
+/signing/metadata.json
+/signing/tools/

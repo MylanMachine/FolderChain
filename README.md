@@ -50,6 +50,8 @@ Ports: TCP 47124 (sync), UDP 47123 (discovery).
 .\build.ps1
 ```
 
+Release builds are code-signed so Windows 11 Smart App Control allows them; see [SIGNING.md](SIGNING.md). Tests run on every push in GitHub Actions.
+
 Code layout: `internal/engine` is the sync engine (scanner, version vectors, protocol, discovery, transfers) with integration tests that run real devices against each other, including silent network drops, interrupted transfers, crashes and conflicts. `main.go` / `winshell.go` / `server.go` are the tray, window, and local UI API; `web/` is the UI.
 
 ## License
